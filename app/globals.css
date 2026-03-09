@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+@import "animate.css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -8,122 +8,120 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
+  --font-mono: var(--font-mono);
+
   --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
   --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
+  --color-popover-foreground: var(--popover-foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Radius settings - Bo góc tròn theo phong cách Modern UI */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* BACKGROUND: Tone xám ấm, trầm hơn để làm nền cho gradient */
+  --background: oklch(0.95 0.01 85);
+  /* FOREGROUND: Màu than chì đậm (Charcoal) - Đảm bảo phông Inter cực kỳ rõ */
+  --foreground: oklch(0.22 0.02 85);
+
+  /* CARD: Kính mờ trắng tinh khôi, trong suốt để xuyên thấu gradient */
+  --card: oklch(1 0 0 / 75%);
+  --card-foreground: oklch(0.22 0.02 85);
+  --popover: oklch(1 0 0 / 95%);
+  --popover-foreground: oklch(0.22 0.02 85);
+
+  /* PRIMARY: Xanh rêu trầm (Deep Sage) - Đại diện cho công nghệ hiện đại */
+  --primary: oklch(0.68 0.07 160);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* SECONDARY: Mã màu #D1BD89 (Rich Beige) của bạn */
+  --secondary: oklch(0.78 0.08 85);
+  --secondary-foreground: oklch(0.32 0.05 85);
+
+  /* MUTED: Tone màu kem nhạt */
+  --muted: oklch(0.92 0.03 85);
+  --muted-foreground: oklch(0.48 0.03 85);
+
+  /* ACCENT: Màu nhấn khi hover - Tone vàng cát nhạt */
+  --accent: oklch(0.88 0.06 85);
+  --accent-foreground: oklch(0.22 0.02 85);
+
+  /* DESTRUCTIVE: Đỏ đất (Terracotta) - Cảnh báo lỗi một cách tinh tế */
+  --destructive: oklch(0.6 0.16 25);
+
+  /* BORDER & RING: Đồng bộ với tone trầm của hệ thống */
+  --border: oklch(0.86 0.02 85);
+  --input: oklch(0.86 0.02 85);
+  --ring: oklch(0.68 0.07 160);
+
+  --radius: 1rem;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0.00 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* 🌟 TIỆN ÍCH CLASS TỰ TẠO */
+@layer utilities {
+
+  /* Hiệu ứng kính mờ bổ trợ */
+  .glass-effect {
+    @apply bg-white/40 backdrop-blur-xl border border-white/60 shadow-sm;
+  }
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground antialiased;
+    /* Áp dụng Gradient trực tiếp bằng CSS thuần để tránh lỗi của Tailwind v4 */
+    background: linear-gradient(145deg,
+        #D1BD89 0%,
+        /* Rich Beige của bạn */
+        #F2EFE4 45%,
+        /* Ivory trắng sữa */
+        #9CA99C 100%
+        /* Deep Sage (Xanh rêu trầm) */
+      );
+    background-attachment: fixed;
   }
+
   html {
     @apply font-sans;
+  }
+
+  /* 🛠 SCROLLBAR TÙY CHỈNH: Nhìn rất tech và gọn gàng */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-foreground/10 rounded-full transition-colors border-2 border-transparent bg-clip-padding;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/40;
   }
 }
