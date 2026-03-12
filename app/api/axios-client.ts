@@ -2,21 +2,21 @@
 
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
-// 🛠 Thay đổi URL này cho khớp với Localhost hoặc Server của Backend C#
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+// 🛠 Mặc định trỏ về API Gateway dùng chung của cả nhóm (Cổng 5092)
+// Nếu ai muốn dùng port riêng thì sẽ cấu hình ghi đè ở file API của người đó
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_GATEWAY_URL || "http://localhost:5092";
 
 const axiosClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10 giây
+  timeout: 10000,
 });
 
-// 🔍 INTERCEPTORS: Nơi chúng ta "soi" dữ liệu trước khi đến tay UI
 axiosClient.interceptors.request.use(
   (config) => {
-    // Bạn có thể thêm Token vào đây nếu sau này có phần Login
     console.log(
       `🚀 [API Request] ${config.method?.toUpperCase()} - ${config.url}`,
     );
@@ -28,10 +28,9 @@ axiosClient.interceptors.request.use(
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log(`✅ [API Response] Success from: ${response.config.url}`);
-    return response.data; // Trả về data trực tiếp để FE dùng cho gọn
+    return response.data;
   },
   (error) => {
-    // Xử lý lỗi tập trung (VD: Thông báo lỗi từ BE)
     console.error("❌ [API Error]", error.response?.data || error.message);
     return Promise.reject(error);
   },
