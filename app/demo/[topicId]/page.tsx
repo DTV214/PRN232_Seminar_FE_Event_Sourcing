@@ -3,9 +3,9 @@
 import * as React from "react";
 import { useParams, notFound } from "next/navigation";
 import Topic2DemoPage from "@/app/features/topic-2-order-store/page";
+import Topic1WalletPage from "@/app/features/topic-1-wallet/page";
 
 // Tương lai: Import các file page/component chính của các nhóm khác tại đây
-// import Topic1Page from "@/features/topic-1-wallet/page";
 // import Topic3Page from "@/features/topic-3-payment/page";
 // import Topic4Page from "@/features/topic-4-analytics/page";
 
@@ -19,8 +19,7 @@ export default function DynamicTopicDemoPage() {
   // Sử dụng Switch-Case để điều phối. Ai code xong phần nào thì mở comment phần đó.
   switch (topicId) {
     case "topic-1":
-      // return <Topic1Page />;
-      return notFound(); // Nhóm 1 chưa xong nên tạm cho 404
+      return <Topic1WalletPage />;
 
     case "topic-2":
       // Gọi ĐÚNG file page của bạn ra đây

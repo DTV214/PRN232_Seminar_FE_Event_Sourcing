@@ -20,7 +20,8 @@ export default function DemoHubPage() {
       description: "Mô phỏng luồng nạp/rút và biến động số dư bất đồng bộ.",
       icon: <Wallet className="w-8 h-8 text-blue-600" />,
       color: "border-blue-200 hover:bg-blue-50/50",
-      status: "Coming Soon",
+      status: "Active",
+      active: true,
     },
     {
       id: "topic-2",
