@@ -1,11 +1,17 @@
 import axiosClient from "@/app/api/axios-client";
 
-// ĐỊNH NGHĨA URL RIÊNG CHO CHỦ ĐỀ 2 (TỒN KHO)
-// Việc ghi rõ http://localhost:5254 sẽ giúp Axios bỏ qua BASE_URL 5092 ở file chung
-const INVENTORY_API = "http://localhost:5254/api/danh-inventory";
+// ĐỊNH NGHĨA URL QUA API GATEWAY (CỔNG 5092)
+// Giả định axiosClient của bạn đã trỏ sẵn vào http://localhost:5092
+// Nếu chưa, bạn có thể hardcode cụm "http://localhost:5092" vào trước các đường dẫn
+const INVENTORY_API = "/inventory-service/api/danh-inventory";
+const ORDER_API = "/order-service/api/orders";
 
 export const orderApi = {
-  // 1. Nhập kho
+  // ==========================================
+  // NHÓM 1: CÁC API CỦA INVENTORY SERVICE
+  // ==========================================
+
+  // 1. Nhập kho (Dành cho Admin/Thủ kho)
   importStock: (data: {
     productId: string;
     productName: string;
@@ -14,22 +20,27 @@ export const orderApi = {
     return axiosClient.post(`${INVENTORY_API}/import-stock`, data);
   },
 
-  // 2. Kích hoạt Saga (Order Created)
-  simulateOrder: (data: {
-    orderId: string;
-    productId: string;
-    quantity: number;
-  }) => {
-    return axiosClient.post(`${INVENTORY_API}/test-order-created`, data);
-  },
-
-  // 3. Lấy tồn kho
+  // 2. Lấy tồn kho hiện tại để hiển thị
   getCurrentStock: (productId: string) => {
     return axiosClient.get(`${INVENTORY_API}/stock/${productId}`);
   },
 
-  // 4. Lấy lịch sử Event Sourcing
+  // 3. Lấy lịch sử Event Sourcing (Bảng Radar)
   getRecentEvents: (count: number = 10) => {
     return axiosClient.get(`${INVENTORY_API}/events?count=${count}`);
+  },
+
+  // ==========================================
+  // NHÓM 2: CÁC API CỦA ORDER SERVICE (Kích hoạt Saga)
+  // ==========================================
+
+  // 4. Phát động tạo đơn hàng (Chỉ gửi ProductId và Quantity, Backend tự sinh OrderId)
+  createOrder: (data: { productId: string; quantity: number }) => {
+    return axiosClient.post(`${ORDER_API}`, data);
+  },
+
+  // 5. HÀM MỚI: Dùng để hỏi thăm trạng thái đơn hàng (Polling) xem Saga đã xong chưa
+  getOrderStatus: (orderId: string) => {
+    return axiosClient.get(`${ORDER_API}/${orderId}`);
   },
 };

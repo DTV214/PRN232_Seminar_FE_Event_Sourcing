@@ -23,17 +23,15 @@ export default function Topic2Page() {
 
   const [newProductName, setNewProductName] = useState("");
 
-  // Tự động load dữ liệu khi trang vừa mở hoặc khi đổi Sản phẩm demo
   useEffect(() => {
     fetchStock();
     fetchEvents();
   }, [activeProductId, fetchStock, fetchEvents]);
 
-  // Hàm xử lý khi bấm nút Tạo sản phẩm mới
   const handleCreateNew = async () => {
     if (!newProductName.trim()) return;
     await createNewProduct(newProductName);
-    setNewProductName(""); // Xóa trắng ô nhập sau khi tạo xong
+    setNewProductName("");
   };
 
   return (
@@ -41,7 +39,6 @@ export default function Topic2Page() {
       <Navbar />
 
       <main className="flex-1 pt-32 pb-16 container mx-auto px-6">
-        {/* Header */}
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest mb-3">
@@ -66,11 +63,16 @@ export default function Topic2Page() {
           </div>
         </div>
 
-        {/* BẢNG ĐIỀU KHIỂN SẢN PHẨM DEMO (LINH ĐỘNG) */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 bg-white/40 backdrop-blur-xl rounded-3xl border border-white/60 shadow-sm items-center justify-between">
+        {/* BẢNG ĐIỀU KHIỂN SẢN PHẨM */}
+        <div
+          className={`flex flex-col md:flex-row gap-4 mb-8 p-4 backdrop-blur-xl rounded-3xl border shadow-sm items-center justify-between transition-all ${!activeProductId ? "bg-primary/10 border-primary/30 animate-pulse" : "bg-white/40 border-white/60"}`}
+        >
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs font-black uppercase text-muted-foreground ml-2 mr-2 flex items-center gap-1">
-              <Package className="w-4 h-4" /> Chọn kho hàng:
+            <span
+              className={`text-xs font-black uppercase ml-2 mr-2 flex items-center gap-1 ${!activeProductId ? "text-primary" : "text-muted-foreground"}`}
+            >
+              <Package className="w-4 h-4" />{" "}
+              {!activeProductId ? "👉 CHỌN HOẶC TẠO SẢN PHẨM:" : "Kho hàng:"}
             </span>
             <button
               onClick={() =>
@@ -95,8 +97,9 @@ export default function Topic2Page() {
               📱 iPhone
             </button>
 
-            {/* Nếu đang chọn một sản phẩm tự tạo (không phải laptop/iphone) thì hiển thị tab của nó lên */}
-            {!activeProductId.startsWith("222") &&
+            {/* SỬA LỖI Ở ĐÂY: Thêm điều kiện activeProductId phải có giá trị */}
+            {activeProductId &&
+              !activeProductId.startsWith("222") &&
               !activeProductId.startsWith("333") && (
                 <button className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-primary text-white shadow-lg shadow-primary/30">
                   📦 {activeProductName}
@@ -104,7 +107,6 @@ export default function Topic2Page() {
               )}
           </div>
 
-          {/* Ô nhập liệu tạo sản phẩm mới */}
           <div className="flex items-center gap-2 w-full md:w-auto">
             <input
               type="text"

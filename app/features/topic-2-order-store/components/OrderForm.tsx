@@ -5,7 +5,8 @@ import { ShoppingBag, Plus, Loader2, AlertTriangle } from "lucide-react";
 import { useTopic2Store } from "../store/useTopic2Store";
 
 export function OrderForm() {
-  const { simulateOrder, isProcessing, activeProductName, inventoryCount } =
+  // SỬA Ở ĐÂY: Đổi simulateOrder thành createOrder
+  const { createOrder, isProcessing, activeProductName, inventoryCount } =
     useTopic2Store();
 
   // State cục bộ để lưu số lượng muốn mua
@@ -13,7 +14,8 @@ export function OrderForm() {
 
   const handleOrder = () => {
     if (quantity > 0) {
-      simulateOrder(quantity);
+      // Gọi đúng hàm mới
+      createOrder(quantity);
     }
   };
 
@@ -38,7 +40,7 @@ export function OrderForm() {
         <label className="block text-xs font-black text-muted-foreground uppercase mb-3 flex items-center justify-between">
           <span>Sản phẩm mục tiêu:</span>
           <span className="text-primary bg-primary/10 px-2 py-1 rounded-md">
-            {activeProductName}
+            {activeProductName || "Chưa chọn"}
           </span>
         </label>
         <div className="flex items-center gap-4 justify-between">
@@ -53,7 +55,7 @@ export function OrderForm() {
               setQuantity(Math.max(1, parseInt(e.target.value) || 1))
             }
             className="w-24 px-4 py-3 rounded-xl text-xl font-black bg-white border border-black/10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-center shadow-inner"
-            disabled={isProcessing}
+            disabled={isProcessing || !activeProductName}
           />
         </div>
       </div>
@@ -74,7 +76,7 @@ export function OrderForm() {
 
       <button
         onClick={handleOrder}
-        disabled={isProcessing}
+        disabled={isProcessing || !activeProductName}
         className={`w-full py-5 rounded-2xl text-white font-black text-lg shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 ${willFail ? "bg-red-500 hover:bg-red-600 shadow-red-500/30" : "bg-primary hover:bg-primary/90 shadow-primary/30"}`}
       >
         {isProcessing ? (

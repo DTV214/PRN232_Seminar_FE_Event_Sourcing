@@ -13,7 +13,6 @@ export function InventoryCard() {
     activeProductName,
   } = useTopic2Store();
 
-  // State cục bộ lưu số lượng muốn nhập kho (mặc định để sẵn 50 cho nhanh)
   const [restockQty, setRestockQty] = useState(50);
 
   const handleRestock = async () => {
@@ -45,18 +44,21 @@ export function InventoryCard() {
         </button>
       </div>
 
-      {/* Khu vực hiển thị Tồn kho */}
       <div className="grid grid-cols-1 gap-4 mb-6">
         <div className="p-8 rounded-3xl bg-white/80 border border-white shadow-sm text-center relative overflow-hidden">
           <p className="text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest">
-            Tồn kho: <span className="text-primary">{activeProductName}</span>
+            {/* THÊM CHỮ MẶC ĐỊNH Ở ĐÂY */}
+            Tồn kho:{" "}
+            <span className="text-primary">
+              {activeProductName || "Chưa chọn SP"}
+            </span>
           </p>
           <p
             className={`text-6xl font-black transition-colors ${inventoryCount > 0 ? "text-foreground" : "text-red-500"}`}
           >
             {inventoryCount}
           </p>
-          {inventoryCount === 0 && (
+          {inventoryCount === 0 && activeProductName && (
             <div className="absolute bottom-3 left-0 right-0 text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse">
               ⚠ Kho trống - Đơn hàng sẽ bị hủy!
             </div>
@@ -64,7 +66,6 @@ export function InventoryCard() {
         </div>
       </div>
 
-      {/* Khu vực Nhập kho Động */}
       <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-100">
         <label className="block text-xs font-black text-emerald-800 uppercase mb-3">
           Nhập thêm hàng hóa
@@ -77,12 +78,14 @@ export function InventoryCard() {
             onChange={(e) =>
               setRestockQty(Math.max(1, parseInt(e.target.value) || 1))
             }
-            className="w-full px-4 py-3 rounded-xl text-lg font-black bg-white border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center text-emerald-900 shadow-inner"
-            disabled={isProcessing}
+            // KHÓA INPUT NẾU CHƯA CHỌN SP
+            className="w-full px-4 py-3 rounded-xl text-lg font-black bg-white border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center text-emerald-900 shadow-inner disabled:opacity-50"
+            disabled={isProcessing || !activeProductName}
           />
           <button
             onClick={handleRestock}
-            disabled={isProcessing}
+            // KHÓA NÚT BẤM NẾU CHƯA CHỌN SP
+            disabled={isProcessing || !activeProductName}
             className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-black hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/30 flex items-center gap-2 disabled:opacity-50 shrink-0"
           >
             {isProcessing ? (
