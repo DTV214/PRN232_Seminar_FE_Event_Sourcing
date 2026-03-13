@@ -23,18 +23,29 @@ export interface RawSystemEvent {
   timestamp: string;
 }
 
+// (MỚI THÊM) Interface cho Sản phẩm trong kho
+export interface InventoryItem {
+  productId: string;
+  productName: string;
+  stockQuantity: number;
+  lastUpdated: string;
+}
+
 interface Topic2State {
   activeProductId: string;
   activeProductName: string;
+  productList: InventoryItem[]; // (MỚI THÊM) Danh sách tất cả sản phẩm
 
   setActiveProduct: (id: string, name: string) => void;
   createNewProduct: (name: string) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>; // (MỚI THÊM) Hàm xóa
 
   events: SystemEvent[];
   inventoryCount: number;
   orderCount: number;
   isProcessing: boolean;
 
+  fetchAllProducts: () => Promise<void>; // (MỚI THÊM) Lấy tất cả SP
   fetchStock: () => Promise<void>;
   fetchEvents: () => Promise<void>;
   importStock: (quantity: number) => Promise<void>;
@@ -44,12 +55,26 @@ interface Topic2State {
 }
 
 export const useTopic2Store = create<Topic2State>((set, get) => ({
-  activeProductId: "", // Để rỗng ban đầu (Dynamic)
+  activeProductId: "",
   activeProductName: "",
+  productList: [],
 
   setActiveProduct: (id: string, name: string) => {
     set({ activeProductId: id, activeProductName: name });
     get().fetchStock();
+  },
+
+  // ==========================================
+  // LẤY TẤT CẢ SẢN PHẨM TỪ BE
+  // ==========================================
+  fetchAllProducts: async () => {
+    try {
+      const data = (await orderApi.getAllStock()) as any;
+      const list = data.data || data || [];
+      set({ productList: list });
+    } catch (error) {
+      console.error("Lỗi lấy danh sách sản phẩm:", error);
+    }
   },
 
   createNewProduct: async (name: string) => {
@@ -67,8 +92,29 @@ export const useTopic2Store = create<Topic2State>((set, get) => ({
         stockQuantity: 0,
       });
       await get().fetchEvents();
+      await get().fetchAllProducts(); // Cập nhật lại list sau khi tạo
     } catch (error) {
       console.error("Lỗi tạo sản phẩm mới:", error);
+    } finally {
+      set({ isProcessing: false });
+    }
+  },
+
+  // ==========================================
+  // XÓA SẢN PHẨM
+  // ==========================================
+  deleteProduct: async (id: string) => {
+    set({ isProcessing: true });
+    try {
+      await orderApi.deleteStock(id);
+      await get().fetchAllProducts(); // Cập nhật lại list
+
+      // Nếu sản phẩm đang chọn bị xóa, ta reset UI về rỗng
+      if (get().activeProductId === id) {
+        set({ activeProductId: "", activeProductName: "", inventoryCount: 0 });
+      }
+    } catch (error) {
+      console.error("Lỗi xóa sản phẩm:", error);
     } finally {
       set({ isProcessing: false });
     }
@@ -81,8 +127,6 @@ export const useTopic2Store = create<Topic2State>((set, get) => ({
 
   fetchStock: async () => {
     const productId = get().activeProductId;
-
-    // BỔ SUNG CHỐT CHẶN 1: Nếu chưa chọn sản phẩm thì không làm gì cả
     if (!productId) return;
 
     try {
@@ -97,10 +141,18 @@ export const useTopic2Store = create<Topic2State>((set, get) => ({
 
   fetchEvents: async () => {
     try {
-      const data = (await orderApi.getRecentEvents(20)) as any;
-      const rawEvents: RawSystemEvent[] = data.data || data;
+      const [inventoryDataRes, orderDataRes] = await Promise.all([
+        orderApi.getRecentEvents(20).catch(() => ({ data: [] })),
+        orderApi.getRecentOrderEvents(20).catch(() => ({ data: [] })),
+      ]);
 
-      const parsedEvents: SystemEvent[] = rawEvents.map(
+      const inventoryRawEvents =
+        (inventoryDataRes as any).data || inventoryDataRes || [];
+      const orderRawEvents = (orderDataRes as any).data || orderDataRes || [];
+
+      const allRawEvents = [...inventoryRawEvents, ...orderRawEvents];
+
+      const parsedEvents: SystemEvent[] = allRawEvents.map(
         (ev: RawSystemEvent) => ({
           ...ev,
           eventData:
@@ -109,16 +161,19 @@ export const useTopic2Store = create<Topic2State>((set, get) => ({
               : (ev.eventData as EventPayload),
         }),
       );
-      set({ events: parsedEvents });
+
+      parsedEvents.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
+      set({ events: parsedEvents.slice(0, 20) });
     } catch (error) {
-      console.error("Lỗi lấy lịch sử:", error);
+      console.error("Lỗi lấy lịch sử tổng hợp:", error);
     }
   },
 
   importStock: async (quantity) => {
     const { activeProductId, activeProductName } = get();
-
-    // BỔ SUNG CHỐT CHẶN 2
     if (!activeProductId) {
       alert("Vui lòng chọn hoặc tạo sản phẩm trước khi nhập kho!");
       return;
@@ -133,39 +188,32 @@ export const useTopic2Store = create<Topic2State>((set, get) => ({
       });
       await get().fetchStock();
       await get().fetchEvents();
+      await get().fetchAllProducts(); // Cập nhật lại số lượng trong List
     } finally {
       set({ isProcessing: false });
     }
   },
 
-  // ==============================================================
-  // VÒNG LẶP SAGA POLLING (LINH HỒN CỦA GIAO DIỆN BẤT ĐỒNG BỘ)
-  // ==============================================================
   createOrder: async (qty) => {
     if (get().isProcessing) return;
 
     const productId = get().activeProductId;
-
-    // BỔ SUNG CHỐT CHẶN 3
     if (!productId) {
       alert("Vui lòng chọn hoặc tạo một sản phẩm trước khi mua hàng!");
       return;
     }
 
-    set({ isProcessing: true }); // Bật loading xoay xoay trên UI
+    set({ isProcessing: true });
 
     try {
-      // Bước 1: Gọi API kích nổ RabbitMQ
       const response = (await orderApi.createOrder({
         productId,
         quantity: qty,
       })) as any;
 
-      // Lấy OrderId vừa được sinh ra từ Backend
       const orderId = response.orderId || response.data?.orderId;
       if (!orderId) throw new Error("Không nhận được OrderId từ hệ thống.");
 
-      // Bước 2: Bắt đầu quá trình Polling hỏi thăm kết quả
       let attempts = 0;
       const maxAttempts = 15;
 
@@ -175,39 +223,30 @@ export const useTopic2Store = create<Topic2State>((set, get) => ({
           const statusRes = (await orderApi.getOrderStatus(orderId)) as any;
           const orderData = statusRes.data || statusRes;
 
-          // Nếu trạng thái đã thay đổi từ Pending sang Confirmed hoặc Cancelled
           if (
             orderData.status === "Confirmed" ||
             orderData.status === "Cancelled"
           ) {
-            clearInterval(intervalId); // Tắt vòng lặp
+            clearInterval(intervalId);
 
-            // Cập nhật lại số liệu trên màn hình
             await get().fetchStock();
             await get().fetchEvents();
+            await get().fetchAllProducts(); // Cập nhật lại số lượng trong List
 
             set({
               isProcessing: false,
               orderCount: get().orderCount + 1,
             });
-
-            console.log(
-              `Luồng Saga hoàn tất với trạng thái: ${orderData.status}`,
-            );
           } else if (attempts >= maxAttempts) {
-            // Trường hợp chờ quá lâu không thấy BE báo lại (Timeout)
             clearInterval(intervalId);
             set({ isProcessing: false });
-            console.error("Timeout: Quá thời gian chờ phản hồi từ luồng Saga.");
           }
         } catch (pollError) {
-          console.error("Lỗi khi kiểm tra trạng thái đơn hàng:", pollError);
           clearInterval(intervalId);
           set({ isProcessing: false });
         }
-      }, 2000); // Mỗi 2 giây gọi hỏi thăm BE một lần
+      }, 2000);
     } catch (error) {
-      console.error("Lỗi khi phát động đơn hàng:", error);
       set({ isProcessing: false });
     }
   },

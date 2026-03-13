@@ -19,7 +19,15 @@ export const orderApi = {
   }) => {
     return axiosClient.post(`${INVENTORY_API}/import-stock`, data);
   },
+  // (MỚI THÊM) Lấy danh sách tất cả sản phẩm trong kho
+  getAllStock: () => {
+    return axiosClient.get(`${INVENTORY_API}/stock/all`);
+  },
 
+  // (MỚI THÊM) Xóa sản phẩm khỏi kho
+  deleteStock: (productId: string) => {
+    return axiosClient.delete(`${INVENTORY_API}/stock/${productId}`);
+  },
   // 2. Lấy tồn kho hiện tại để hiển thị
   getCurrentStock: (productId: string) => {
     return axiosClient.get(`${INVENTORY_API}/stock/${productId}`);
@@ -42,5 +50,14 @@ export const orderApi = {
   // 5. HÀM MỚI: Dùng để hỏi thăm trạng thái đơn hàng (Polling) xem Saga đã xong chưa
   getOrderStatus: (orderId: string) => {
     return axiosClient.get(`${ORDER_API}/${orderId}`);
+  },
+
+  // 6. HÀM MỚI (BỔ SUNG): Lấy log sự kiện từ OrderService (dùng cho bảng Monitor)
+  getRecentOrderEvents: (count: number = 10) => {
+    // Lưu ý: Đảm bảo BE OrderService của bạn đã có API GET /api/orders/events
+    // Nếu chưa có, bạn có thể gọi thẳng GET /api/orders cũng tạm được,
+    // nhưng tốt nhất là BE nên có API trả về bảng OrderEvents.
+    // Dưới đây tôi giả định BE đã có API này.
+    return axiosClient.get(`${ORDER_API}/events?count=${count}`);
   },
 };

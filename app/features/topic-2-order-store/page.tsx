@@ -4,7 +4,14 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Activity, Info, LayoutDashboard, Plus, Package } from "lucide-react";
+import {
+  Activity,
+  Info,
+  LayoutDashboard,
+  Plus,
+  Package,
+  Trash2,
+} from "lucide-react";
 import { OrderForm } from "@/app/features/topic-2-order-store/components/OrderForm";
 import { InventoryCard } from "@/app/features/topic-2-order-store/components/InventoryCard";
 import { EventMonitor } from "@/app/features/event-monitor/components/EventMonitor";
@@ -13,15 +20,22 @@ import { useTopic2Store } from "@/app/features/topic-2-order-store/store/useTopi
 export default function Topic2Page() {
   const {
     activeProductId,
-    activeProductName,
+    productList,
     setActiveProduct,
     createNewProduct,
+    deleteProduct,
+    fetchAllProducts,
     fetchStock,
     fetchEvents,
     isProcessing,
   } = useTopic2Store();
 
   const [newProductName, setNewProductName] = useState("");
+
+  // Gọi fetchAllProducts lần đầu tiên khi mở trang web
+  useEffect(() => {
+    fetchAllProducts();
+  }, [fetchAllProducts]);
 
   useEffect(() => {
     fetchStock();
@@ -63,51 +77,64 @@ export default function Topic2Page() {
           </div>
         </div>
 
-        {/* BẢNG ĐIỀU KHIỂN SẢN PHẨM */}
+        {/* BẢNG ĐIỀU KHIỂN SẢN PHẨM (DYNAMIC 100%) */}
         <div
-          className={`flex flex-col md:flex-row gap-4 mb-8 p-4 backdrop-blur-xl rounded-3xl border shadow-sm items-center justify-between transition-all ${!activeProductId ? "bg-primary/10 border-primary/30 animate-pulse" : "bg-white/40 border-white/60"}`}
+          className={`flex flex-col md:flex-row gap-4 mb-8 p-4 backdrop-blur-xl rounded-3xl border shadow-sm items-center justify-between transition-all ${!activeProductId ? "bg-primary/10 border-primary/30" : "bg-white/40 border-white/60"}`}
         >
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center w-full md:w-auto overflow-x-auto pb-2 custom-scrollbar">
             <span
-              className={`text-xs font-black uppercase ml-2 mr-2 flex items-center gap-1 ${!activeProductId ? "text-primary" : "text-muted-foreground"}`}
+              className={`text-xs font-black uppercase ml-2 mr-2 flex items-center gap-1 whitespace-nowrap ${!activeProductId ? "text-primary animate-pulse" : "text-muted-foreground"}`}
             >
               <Package className="w-4 h-4" />{" "}
-              {!activeProductId ? "👉 CHỌN HOẶC TẠO SẢN PHẨM:" : "Kho hàng:"}
+              {!activeProductId ? "👉 CHỌN SẢN PHẨM:" : "Kho hàng:"}
             </span>
-            <button
-              onClick={() =>
-                setActiveProduct(
-                  "22222222-2222-2222-2222-222222222222",
-                  "Laptop Gaming",
-                )
-              }
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeProductId === "22222222-2222-2222-2222-222222222222" ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white hover:bg-slate-50 text-slate-600"}`}
-            >
-              💻 Laptop
-            </button>
-            <button
-              onClick={() =>
-                setActiveProduct(
-                  "33333333-3333-3333-3333-333333333333",
-                  "iPhone 15 Pro",
-                )
-              }
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeProductId === "33333333-3333-3333-3333-333333333333" ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white hover:bg-slate-50 text-slate-600"}`}
-            >
-              📱 iPhone
-            </button>
 
-            {/* SỬA LỖI Ở ĐÂY: Thêm điều kiện activeProductId phải có giá trị */}
-            {activeProductId &&
-              !activeProductId.startsWith("222") &&
-              !activeProductId.startsWith("333") && (
-                <button className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-primary text-white shadow-lg shadow-primary/30">
-                  📦 {activeProductName}
-                </button>
-              )}
+            {/* DUYỆT DANH SÁCH SẢN PHẨM TỪ BE */}
+            {productList.map((item) => {
+              const isActive = activeProductId === item.productId;
+              return (
+                <div
+                  key={item.productId}
+                  className={`flex items-center rounded-xl border transition-all ${isActive ? "border-primary bg-primary/5 shadow-md shadow-primary/20" : "border-transparent bg-white hover:bg-slate-50 shadow-sm"}`}
+                >
+                  <button
+                    onClick={() =>
+                      setActiveProduct(item.productId, item.productName)
+                    }
+                    className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-colors ${isActive ? "text-primary" : "text-slate-600"}`}
+                  >
+                    📦 {item.productName}{" "}
+                    <span className="text-[10px] font-normal opacity-60 ml-1">
+                      ({item.stockQuantity})
+                    </span>
+                  </button>
+                  {/* NÚT XÓA SẢN PHẨM */}
+                  <button
+                    onClick={() => {
+                      if (
+                        confirm(`Bạn có chắc muốn xóa ${item.productName}?`)
+                      ) {
+                        deleteProduct(item.productId);
+                      }
+                    }}
+                    disabled={isProcessing}
+                    className="pr-3 pl-2 py-2 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-50"
+                    title="Xóa sản phẩm này"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+
+            {productList.length === 0 && (
+              <span className="text-xs italic text-slate-400">
+                Kho trống. Hãy tạo mới!
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
             <input
               type="text"
               value={newProductName}
@@ -142,15 +169,15 @@ export default function Topic2Page() {
               </h4>
               <ul className="text-sm text-secondary-foreground/80 leading-relaxed font-medium space-y-2 list-disc pl-4">
                 <li>
-                  Hãy thử <strong>Tạo sản phẩm mới</strong>, kho sẽ ở mức 0.
+                  Hãy thử <strong>Tạo sản phẩm mới</strong>, kho sẽ ở mức 0. Bạn
+                  có thể tạo vô số sản phẩm.
                 </li>
                 <li>
                   Nhập mua số lượng lớn để xem cảnh báo{" "}
-                  <strong>Saga Thất bại</strong> (Compensating Transaction).
+                  <strong>Saga Thất bại</strong>.
                 </li>
                 <li>
-                  Nhập thêm hàng vào kho và Mua lại để xem{" "}
-                  <strong>Saga Thành công</strong>.
+                  Bấm nút <strong>Thùng rác</strong> để xóa sản phẩm thừa.
                 </li>
               </ul>
             </div>
