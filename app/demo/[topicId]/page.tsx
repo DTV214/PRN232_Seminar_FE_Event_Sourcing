@@ -5,6 +5,7 @@ import { useParams, notFound } from "next/navigation";
 import Topic2DemoPage from "@/app/features/topic-2-order-store/page";
 import Topic1WalletPage from "@/app/features/topic-1-wallet/page";
 import Topic3Page from "@/app/features/topic-3-payment/page";
+import Topic4Page from "@/app/features/topic-4-analytics/page";
 
 // Tương lai: Import các file page/component chính của các nhóm khác tại đây
 // import Topic3Page from "@/features/topic-3-payment/page";
@@ -31,8 +32,7 @@ export default function DynamicTopicDemoPage() {
       return <Topic3Page />;
 
     case "topic-4":
-      // return <Topic4Page />;
-      return notFound();
+      return <Topic4Page />;
 
     default:
       // Nếu user gõ bậy bạ trên URL (ví dụ: /demo/abc) -> Cho ra trang 404

@@ -50,7 +50,8 @@ export default function DemoHubPage() {
         "Replay sự kiện để xây dựng Read-model cho báo cáo kinh doanh.",
       icon: <BarChart3 className="w-8 h-8 text-amber-600" />,
       color: "border-amber-200 hover:bg-amber-50/50",
-      status: "Coming Soon",
+      status: "Active",
+      active: true,
     },
   ];
 
