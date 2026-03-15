@@ -4,6 +4,7 @@ import * as React from "react";
 import { useParams, notFound } from "next/navigation";
 import Topic2DemoPage from "@/app/features/topic-2-order-store/page";
 import Topic1WalletPage from "@/app/features/topic-1-wallet/page";
+import Topic3Page from "@/app/features/topic-3-payment/page";
 
 // Tương lai: Import các file page/component chính của các nhóm khác tại đây
 // import Topic3Page from "@/features/topic-3-payment/page";
@@ -27,7 +28,7 @@ export default function DynamicTopicDemoPage() {
 
     case "topic-3":
       // return <Topic3Page />;
-      return notFound();
+      return <Topic3Page />;
 
     case "topic-4":
       // return <Topic4Page />;

@@ -35,12 +35,13 @@ export default function DemoHubPage() {
     },
     {
       id: "topic-3",
-      title: "Cổng Thanh toán",
+      title: "Hậu Thanh toán",
       description:
-        "Xử lý tích hợp bên thứ 3 và trạng thái thanh toán phức tạp.",
+        "Eventual Consistency - Nhất quán dữ liệu giữa các service",
       icon: <CreditCard className="w-8 h-8 text-rose-600" />,
       color: "border-rose-200 hover:bg-rose-50/50",
       status: "Coming Soon",
+      active: true,
     },
     {
       id: "topic-4",
@@ -78,19 +79,17 @@ export default function DemoHubPage() {
             <Link
               key={topic.id}
               href={topic.active ? `/demo/${topic.id}` : "#"}
-              className={`group relative p-8 rounded-[2.5rem] bg-white/40 backdrop-blur-xl border-2 transition-all duration-500 shadow-sm flex flex-col items-start text-left ${
-                topic.active
-                  ? topic.color + " hover:-translate-y-2 hover:shadow-xl"
-                  : "opacity-60 cursor-not-allowed border-transparent grayscale"
-              }`}
+              className={`group relative p-8 rounded-[2.5rem] bg-white/40 backdrop-blur-xl border-2 transition-all duration-500 shadow-sm flex flex-col items-start text-left ${topic.active
+                ? topic.color + " hover:-translate-y-2 hover:shadow-xl"
+                : "opacity-60 cursor-not-allowed border-transparent grayscale"
+                }`}
             >
               {/* Status Badge */}
               <div
-                className={`absolute top-6 right-8 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
-                  topic.active
-                    ? "bg-primary/20 text-primary"
-                    : "bg-black/5 text-muted-foreground"
-                }`}
+                className={`absolute top-6 right-8 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${topic.active
+                  ? "bg-primary/20 text-primary"
+                  : "bg-black/5 text-muted-foreground"
+                  }`}
               >
                 {topic.status}
               </div>
