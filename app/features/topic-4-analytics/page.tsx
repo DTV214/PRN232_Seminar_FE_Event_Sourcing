@@ -50,6 +50,14 @@ interface ProfileFormState {
   address: string;
 }
 
+interface ReplayLogItem {
+  id: string;
+  source: "auth" | "profile";
+  eventType: string;
+  occurredOn: string;
+  payloadJson: string;
+}
+
 const toDateTimeLocal = (iso?: string | null): string => {
   if (!iso) return "";
   const date = new Date(iso);
@@ -102,7 +110,7 @@ export default function Topic4AnalyticsPage() {
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [behavior, setBehavior] = React.useState<UserBehavior | null>(null);
   const [status, setStatus] = React.useState<StatusMessage | null>(null);
-  const [logs, setLogs] = React.useState<LogItem[]>([]);
+  const [, setLogs] = React.useState<LogItem[]>([]);
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [profileForm, setProfileForm] = React.useState<ProfileFormState>({
@@ -130,6 +138,32 @@ export default function Topic4AnalyticsPage() {
       ...prev,
     ].slice(0, 20));
   }, []);
+
+  const replayLogs = React.useMemo<ReplayLogItem[]>(() => {
+    if (!behavior) return [];
+
+    const authEvents = behavior.authEvents.map((event, index) => ({
+      id: `auth-${index}-${event.occurredOn}-${event.eventType}`,
+      source: "auth" as const,
+      eventType: event.eventType,
+      occurredOn: event.occurredOn,
+      payloadJson: event.payloadJson,
+    }));
+
+    const profileEvents = behavior.profileEvents.map((event, index) => ({
+      id: `profile-${index}-${event.occurredOn}-${event.eventType}`,
+      source: "profile" as const,
+      eventType: event.eventType,
+      occurredOn: event.occurredOn,
+      payloadJson: event.payloadJson,
+    }));
+
+    return [...authEvents, ...profileEvents].sort((a, b) => {
+      const aTime = new Date(a.occurredOn).getTime();
+      const bTime = new Date(b.occurredOn).getTime();
+      return bTime - aTime;
+    });
+  }, [behavior]);
 
   const loadProfile = React.useCallback(
     async (id?: string) => {
@@ -309,9 +343,9 @@ export default function Topic4AnalyticsPage() {
     <div className="min-h-screen flex flex-col bg-theme-gradient">
       <Navbar />
       <main className="flex-1 pt-32 pb-20 container mx-auto px-6">
-        <h1 className="text-4xl font-black mb-2">Topic 4 - Phân tích & Thống kê</h1>
+        <h1 className="text-4xl font-black mb-2">Topic 4 - Phân tích hành vi người dùng</h1>
         <p className="text-muted-foreground mb-6">
-          Toàn bộ quy trình trong một trang: gửi OTP, xác minh OTP, đăng nhập thử theo thời gian, quản lý hồ sơ, theo dõi hành vi và cập nhật bằng popup.
+          Toàn bộ quy trình trong một trang: gửi OTP, xác minh OTP, đăng nhập thử theo thời gian, quản lý hồ sơ và phân tích hành vi người dùng.
         </p>
 
         {status && (
@@ -392,11 +426,19 @@ export default function Topic4AnalyticsPage() {
             )}
             <div className="mt-4">
               <p className="font-bold mb-2">Nhật ký thu thập dữ liệu</p>
-              <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2">
-                {logs.length === 0 ? <p className="text-sm text-muted-foreground">Chưa có nhật ký.</p> : logs.map((log) => (
-                  <div key={log.id} className="p-2 rounded-lg bg-white/70 border border-white text-sm">
-                    <p>{log.text}</p>
-                    <p className="text-xs text-muted-foreground">{formatDateTime(log.createdAt)}</p>
+              <div className="max-h-64 overflow-y-auto custom-scrollbar space-y-2">
+                {replayLogs.length === 0 ? <p className="text-sm text-muted-foreground">Chưa có event replay.</p> : replayLogs.map((event) => (
+                  <div key={event.id} className="p-2 rounded-lg bg-white/70 border border-white text-sm space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${event.source === "auth" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
+                        {event.source === "auth" ? "Auth" : "Profile"}
+                      </span>
+                      <p className="font-semibold">{event.eventType}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{formatDateTime(event.occurredOn)}</p>
+                    <pre className="text-xs bg-white/80 border border-black/5 rounded p-2 overflow-x-auto whitespace-pre-wrap break-all">
+                      {event.payloadJson}
+                    </pre>
                   </div>
                 ))}
               </div>

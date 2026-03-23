@@ -45,9 +45,9 @@ export default function DemoHubPage() {
     },
     {
       id: "topic-4",
-      title: "Phân tích & Thống kê",
+      title: "Phân tích hành vi người dùng",
       description:
-        "Replay sự kiện để xây dựng Read-model cho báo cáo kinh doanh.",
+        "Replay sự kiện để xây dựng Read-model dữ liệu người dùng.",
       icon: <BarChart3 className="w-8 h-8 text-amber-600" />,
       color: "border-amber-200 hover:bg-amber-50/50",
       status: "Active",

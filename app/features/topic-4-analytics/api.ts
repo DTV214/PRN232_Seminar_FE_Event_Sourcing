@@ -58,13 +58,25 @@ export interface UpdateProfilePayload {
   address?: string | null;
 }
 
-export interface UserBehavior {
+export interface UserBehaviorEvent {
+  eventType: string;
+  occurredOn: string;
+  payloadJson: string;
+}
+
+export interface UserBehaviorSummary {
   userId: string;
   email: string;
   currentStatus: string;
+  registeredAt: string | null;
+  verifiedAt: string | null;
   loginCount: number;
   firstLoginAt: string | null;
   lastLoginAt: string | null;
+  lockedCount: number;
+  unlockedCount: number;
+  lastLockedAt: string | null;
+  lastUnlockedAt: string | null;
   profileUpdateCount: number;
   lastProfileUpdatedAt: string | null;
   preferredLoginHour: number | null;
@@ -72,6 +84,19 @@ export interface UserBehavior {
   averageDaysBetweenLogins: number;
   estimatedActiveDaysSpan: number;
   averageSessionDurationMinutes: number;
+  dataSource: string | null;
+}
+
+export interface UserBehaviorReplay {
+  userId: string;
+  authEvents: UserBehaviorEvent[];
+  profileEvents: UserBehaviorEvent[];
+  summary: UserBehaviorSummary;
+}
+
+export interface UserBehavior extends UserBehaviorSummary {
+  authEvents: UserBehaviorEvent[];
+  profileEvents: UserBehaviorEvent[];
 }
 
 const unwrapEnvelope = <T>(response: unknown): ApiEnvelope<T> => {
@@ -140,9 +165,24 @@ export const getUserBehavior = async (
   userId: string,
 ): Promise<ApiEnvelope<UserBehavior>> => {
   const response = await axiosClient.get(
-    `/userbehavior-service/api/user-behaviors/${userId}`,
+    `/userbehavior-service/api/user-behaviors/event-replay/${userId}`,
   );
-  return unwrapEnvelope<UserBehavior>(response);
+  const envelope = unwrapEnvelope<UserBehaviorReplay>(response);
+
+  if (!envelope.data) {
+    return { ...envelope, data: null };
+  }
+
+  const summary = envelope.data.summary;
+  return {
+    ...envelope,
+    data: {
+      ...summary,
+      userId: summary.userId || envelope.data.userId,
+      authEvents: envelope.data.authEvents ?? [],
+      profileEvents: envelope.data.profileEvents ?? [],
+    },
+  };
 };
 
 export const getErrorMessage = (
