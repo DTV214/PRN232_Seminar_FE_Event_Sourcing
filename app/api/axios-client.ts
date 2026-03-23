@@ -2,13 +2,12 @@
 
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
-// 🛠 Mặc định trỏ về API Gateway dùng chung của cả nhóm (Cổng 5092)
-// Nếu ai muốn dùng port riêng thì sẽ cấu hình ghi đè ở file API của người đó
-// const BASE_URL =
-//   process.env.NEXT_PUBLIC_API_GATEWAY_URL || "http://localhost:5092";
-
+// 🛠 Production: dùng /api/proxy để tránh Mixed Content (HTTPS→HTTP)
+// Local dev: trỏ thẳng tới API Gateway
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL || "http://14.225.207.221:5092";
+  process.env.NODE_ENV === "production"
+    ? "/api/proxy"
+    : (process.env.NEXT_PUBLIC_API_GATEWAY_URL || "http://14.225.207.221:5092");
 
 const axiosClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
