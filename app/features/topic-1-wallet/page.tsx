@@ -254,9 +254,10 @@ function SuspiciousSection() {
 // SECTION 4: EVENT SOURCING TIMELINE
 // =====================================================================
 function EventTimelineSection() {
-  const { wallet, events, doLoadEvents, loading } = useWalletStore();
+  const { wallet, events, doLoadEvents, doReplay, replayResult, loading } = useWalletStore();
   const [verifyResult, setVerifyResult] = React.useState<any>(null);
   const [verifying, setVerifying] = React.useState(false);
+  const [replaying, setReplaying] = React.useState(false);
 
   const handleVerify = async () => {
     if (!wallet) return;
@@ -269,6 +270,13 @@ function EventTimelineSection() {
       setVerifyResult({ isValid: false, message: "❌ Lỗi kết nối server" });
     }
     setVerifying(false);
+  };
+
+  const handleReplay = async () => {
+    if (!wallet) return;
+    setReplaying(true);
+    await doReplay(wallet.walletId);
+    setReplaying(false);
   };
 
   const eventColors: Record<string, string> = {
@@ -308,6 +316,10 @@ function EventTimelineSection() {
                 className="px-5 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all flex items-center gap-2">
                 <Shield className="w-4 h-4" /> {verifying ? "Đang kiểm tra..." : "🔐 Verify Integrity"}
               </button>
+              <button onClick={handleReplay} disabled={replaying}
+                className="px-5 py-2.5 rounded-xl bg-cyan-600 text-white font-bold text-sm shadow-lg shadow-cyan-600/25 hover:shadow-cyan-600/40 transition-all flex items-center gap-2">
+                <RefreshCw className={`w-4 h-4 ${replaying ? 'animate-spin' : ''}`} /> {replaying ? "Đang replay..." : "🔄 Replay & Heal"}
+              </button>
             </>
           )}
         </div>
@@ -333,6 +345,35 @@ function EventTimelineSection() {
                   <p className="font-bold text-red-700">🚨 {t.eventType} — {t.issue}</p>
                   <p className="text-red-600 font-mono mt-1">Stored: {t.storedHash?.slice(0, 16)}...</p>
                   <p className="text-red-600 font-mono">Expected: {t.expectedHash?.slice(0, 16)}...</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Replay Result */}
+      {replayResult && (
+        <div className={`p-4 rounded-xl border mb-6 ${
+          replayResult.isMatch
+            ? "bg-emerald-50 border-emerald-200"
+            : "bg-orange-50 border-orange-200"
+        }`}>
+          <p className={`font-bold text-sm ${replayResult.isMatch ? "text-emerald-700" : "text-orange-700"}`}>
+            {replayResult.message}
+          </p>
+          <div className="flex gap-6 mt-2 text-xs">
+            <span>💾 Balance trong DB: <b>{Number(replayResult.balanceFromWallet)?.toLocaleString()} VND</b></span>
+            <span>📒 Balance từ Events: <b>{Number(replayResult.balanceFromEvents)?.toLocaleString()} VND</b></span>
+            <span>🔧 Đã tự sửa: <b>{replayResult.wasHealed ? "✅ Có" : "Không cần"}</b></span>
+          </div>
+          {replayResult.replaySteps?.length > 0 && (
+            <div className="mt-3 space-y-1">
+              <p className="text-xs font-bold text-muted-foreground">Replay từng bước:</p>
+              {replayResult.replaySteps.map((step: any, i: number) => (
+                <div key={i} className="flex justify-between text-xs px-3 py-1.5 rounded-lg bg-white/60">
+                  <span>{step.eventType} {step.amount != null ? `(${Number(step.amount).toLocaleString()} VND)` : ''}</span>
+                  <span className="font-mono font-bold">→ {Number(step.runningBalance).toLocaleString()} VND</span>
                 </div>
               ))}
             </div>
