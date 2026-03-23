@@ -32,8 +32,9 @@ interface WalletStore {
 
   // Actions
   doCreateUser: (data: CreateUserRequest) => Promise<void>;
+  doWaitForWallet: (username: string, maxRetries: number) => Promise<void>;
   doCreateAccount: (data: { username: string; email: string }) => Promise<void>;
-  doLoadWallet: (accountId: string) => Promise<void>;
+  doLoadWallet: (searchInput: string) => Promise<void>;
   doLoadWalletByUsername: (username: string) => Promise<void>;
   doDeposit: (data: CreateTransactionRequest) => Promise<void>;
   doWithdraw: (data: CreateTransactionRequest) => Promise<void>;
@@ -64,16 +65,46 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
         message: `🎉 Tạo user "${data.username}" thành công! Đang tự động tạo ví qua RabbitMQ...`,
         messageType: "success",
       });
-      // Tự động load ví sau 1.5 giây (chờ RabbitMQ xử lý)
-      setTimeout(() => {
-        get().doLoadWalletByUsername(data.username);
-      }, 1500);
+      // Polling: kiểm tra ví mỗi 3 giây, tối đa 20 lần (60 giây)
+      get().doWaitForWallet(data.username, 20);
     } catch (err: any) {
       set({
         loading: false,
         message: `❌ Không thể tạo user. ${err.response?.data?.message || 'Vui lòng kiểm tra lại thông tin.'}`,
         messageType: "error",
       });
+    }
+  },
+
+  doWaitForWallet: async (username: string, maxRetries: number) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      // Chờ 3 giây trước mỗi lần kiểm tra
+      await new Promise((r) => setTimeout(r, 3000));
+
+      try {
+        const res = await getWalletByUsername(username);
+        // Ví đã tạo xong!
+        set({
+          wallet: res,
+          message: `✅ Ví của "${(res as any).username}" đã được tạo thành công! Số dư: ${(res as any).balance?.toLocaleString()} VND`,
+          messageType: "success",
+        });
+        return; // Dừng polling
+      } catch {
+        // Ví chưa có → cập nhật progress
+        if (attempt < maxRetries) {
+          set({
+            message: `⏳ Đang chờ tạo ví (lần ${attempt}/${maxRetries})... RabbitMQ đang xử lý hoặc đang phục hồi.`,
+            messageType: "warning",
+          });
+        } else {
+          // Hết số lần thử
+          set({
+            message: `⚠️ Chưa tìm thấy ví sau ${maxRetries} lần thử. Ví sẽ tự tạo khi RabbitMQ phục hồi. Vui lòng tìm ví bằng username sau.`,
+            messageType: "warning",
+          });
+        }
+      }
     }
   },
 
@@ -102,11 +133,10 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(searchInput);
     const isNumber = /^\d+$/.test(searchInput);
 
-    // Số nguyên (User ID) không hợp lệ cho việc tìm ví
     if (isNumber) {
       set({
         loading: false,
-        message: `💡 Vui lòng nhập Email (ví dụ: user@gmail.com) hoặc Username để tìm ví. Số ID không được hỗ trợ.`,
+        message: `💡 Vui lòng nhập Email hoặc Username để tìm ví. Số ID không được hỗ trợ.`,
         messageType: "warning",
       });
       return;
@@ -135,14 +165,14 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       let msg = "";
       if (status === 404) {
         if (isEmail) {
-          msg = `🔍 Không tìm thấy ví cho email "${searchInput}". User chưa tồn tại hoặc ví chưa được tạo.`;
+          msg = `🔍 Không tìm thấy ví cho email "${searchInput}".`;
         } else if (isGuid) {
           msg = `🔍 Không tìm thấy ví với AccountId này.`;
         } else {
           msg = `🔍 Không tìm thấy ví cho username "${searchInput}".`;
         }
       } else if (status === 400) {
-        msg = `⚠️ Định dạng không hợp lệ. Vui lòng nhập Email, Username hoặc AccountId (GUID).`;
+        msg = `⚠️ Định dạng không hợp lệ.`;
       } else {
         msg = `❌ Lỗi kết nối server. Vui lòng thử lại sau.`;
       }
@@ -163,7 +193,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
     } catch {
       set({
         loading: false,
-        message: `⏳ Ví chưa sẵn sàng (RabbitMQ đang xử lý). Vui lòng chờ thêm vài giây rồi nhập AccountId thủ công.`,
+        message: `⏳ Ví chưa sẵn sàng (RabbitMQ đang xử lý). Vui lòng chờ thêm vài giây rồi nhập Username thủ công.`,
         messageType: "warning",
       });
     }
