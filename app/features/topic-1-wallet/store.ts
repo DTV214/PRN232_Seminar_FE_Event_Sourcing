@@ -15,6 +15,7 @@ import {
   getTransactions,
   getSuspicious,
   getEvents,
+  replayAndHeal,
   CreateUserRequest,
   CreateTransactionRequest,
 } from "./api";
@@ -40,7 +41,9 @@ interface WalletStore {
   doWithdraw: (data: CreateTransactionRequest) => Promise<void>;
   doLoadTransactions: (walletId: string) => Promise<void>;
   doLoadSuspicious: () => Promise<void>;
+  replayResult: any;
   doLoadEvents: (walletId: string) => Promise<void>;
+  doReplay: (walletId: string) => Promise<void>;
   clearMessage: () => void;
 }
 
@@ -53,6 +56,7 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   loading: false,
   message: null,
   messageType: null,
+  replayResult: null,
 
   clearMessage: () => set({ message: null, messageType: null }),
 
@@ -290,6 +294,34 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       set({ events: res.events || [] });
     } catch {
       set({ events: [] });
+    }
+  },
+
+  doReplay: async (walletId) => {
+    set({ loading: true, message: null, replayResult: null });
+    try {
+      const res: any = await replayAndHeal(walletId);
+      set({
+        loading: false,
+        replayResult: res,
+        message: res.message || (res.isMatch
+          ? `✅ Dữ liệu toàn vẹn!`
+          : `⚠️ Phát hiện sai lệch! Đã tự động sửa.`),
+        messageType: res.isMatch ? "success" : "warning",
+      });
+      // Nếu đã self-heal → reload wallet
+      if (res.wasHealed) {
+        const w = get().wallet;
+        if (w) {
+          getWallet(w.accountId).then(u => set({ wallet: u })).catch(() => {});
+        }
+      }
+    } catch (err: any) {
+      set({
+        loading: false,
+        message: `❌ Lỗi khi replay: ${err.response?.data?.message || 'Không thể kết nối server.'}`,
+        messageType: "error",
+      });
     }
   },
 }));
