@@ -1,6 +1,7 @@
 "use client";
 
 import axios, { AxiosResponse } from "axios";
+import axiosClient from "@/app/api/axios-client";
 
 export interface ApiEnvelope<T> {
   status: number;
@@ -73,86 +74,75 @@ export interface UserBehavior {
   averageSessionDurationMinutes: number;
 }
 
-const GATEWAY_BASE_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL ?? "http://14.225.207.221:5092";
+const unwrapEnvelope = <T>(response: unknown): ApiEnvelope<T> => {
+  if (
+    response &&
+    typeof response === "object" &&
+    "statusText" in response &&
+    "headers" in response &&
+    "config" in response &&
+    "data" in response
+  ) {
+    return (response as AxiosResponse<ApiEnvelope<T>>).data;
+  }
 
-const authClient = axios.create({
-  baseURL: GATEWAY_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10000,
-});
-
-const profileClient = axios.create({
-  baseURL: GATEWAY_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10000,
-});
-
-const behaviorClient = axios.create({
-  baseURL: GATEWAY_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10000,
-});
+  return response as ApiEnvelope<T>;
+};
 
 export const requestRegisterOtp = async (
   payload: RequestOtpPayload,
 ): Promise<ApiEnvelope<null>> => {
-  const response: AxiosResponse<ApiEnvelope<null>> = await authClient.post(
+  const response = await axiosClient.post(
     "/auth-service/api/auth/register/request-otp",
     payload,
   );
-  return response.data;
+  return unwrapEnvelope<null>(response);
 };
 
 export const verifyRegisterOtp = async (
   payload: VerifyOtpPayload,
 ): Promise<ApiEnvelope<AuthTokenContainer>> => {
-  const response: AxiosResponse<ApiEnvelope<AuthTokenContainer>> =
-    await authClient.post("/auth-service/api/auth/register/verify-otp", payload);
-  return response.data;
+  const response = await axiosClient.post(
+    "/auth-service/api/auth/register/verify-otp",
+    payload,
+  );
+  return unwrapEnvelope<AuthTokenContainer>(response);
 };
 
 export const loginWithBehavior = async (
   payload: LoginPayload,
 ): Promise<ApiEnvelope<AuthTokenContainer>> => {
-  const response: AxiosResponse<ApiEnvelope<AuthTokenContainer>> =
-    await authClient.post("/auth-service/api/auth/login", payload);
-  return response.data;
+  const response = await axiosClient.post("/auth-service/api/auth/login", payload);
+  return unwrapEnvelope<AuthTokenContainer>(response);
 };
 
 export const getProfile = async (
   accountId: string,
 ): Promise<ApiEnvelope<UserProfile>> => {
-  const response: AxiosResponse<ApiEnvelope<UserProfile>> = await profileClient.get(
+  const response = await axiosClient.get(
     `/userprofile-service/api/profiles/${accountId}`,
   );
-  return response.data;
+  return unwrapEnvelope<UserProfile>(response);
 };
 
 export const updateProfile = async (
   accountId: string,
   payload: UpdateProfilePayload,
 ): Promise<ApiEnvelope<UserProfile>> => {
-  const response: AxiosResponse<ApiEnvelope<UserProfile>> = await profileClient.put(
+  const response = await axiosClient.put(
     `/userprofile-service/api/profiles/${accountId}`,
     payload,
   );
-  return response.data;
+  return unwrapEnvelope<UserProfile>(response);
 };
 
 export const getUserBehavior = async (
   userId: string,
 ): Promise<ApiEnvelope<UserBehavior>> => {
-  const response: AxiosResponse<ApiEnvelope<UserBehavior>> = await behaviorClient.get(
+  const response = await axiosClient.get(
     `/userbehavior-service/api/user-behaviors/${userId}`,
   );
-  return response.data;
+  return unwrapEnvelope<UserBehavior>(response);
 };
 
 export const getErrorMessage = (
