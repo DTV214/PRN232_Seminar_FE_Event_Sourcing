@@ -95,3 +95,7 @@ export const getEvents = (walletId: string) =>
 /** Kiểm tra integrity của hash chain */
 export const verifyEvents = (walletId: string) =>
   axiosClient.get(`/payment-service/api/khanh-wallet/events/${walletId}/verify`);
+
+/** Replay & Self-Healing — Tái dựng balance từ events, tự sửa nếu sai */
+export const replayAndHeal = (walletId: string) =>
+  axiosClient.post(`/payment-service/api/khanh-wallet/replay/${walletId}`);
